@@ -27,6 +27,9 @@ const Sanctum: React.FC<Props> = ({ checkOnInit = true, config, children }) => {
     [config.axiosInstance]
   );
 
+  // Used to force authorization for mobile
+  let authToken: string | null = null;
+
   const [sanctumState, setSanctumState] = useState<{
     user: null | {};
     authenticated: null | boolean;
@@ -48,12 +51,15 @@ const Sanctum: React.FC<Props> = ({ checkOnInit = true, config, children }) => {
   const signIn = (
     username: string,
     password: string,
-    remember: boolean = false
+    remember: boolean = false,
+    token: string? = null
   ): Promise<{ twoFactor: boolean; signedIn: boolean; user?: {} }> => {
     const { apiUrl, signInRoute, usernameKey } = config;
 
     return new Promise(async (resolve, reject) => {
       try {
+        if (token) authToken = token;
+
         // Get CSRF cookie.
         await csrf();
 
@@ -116,6 +122,8 @@ const Sanctum: React.FC<Props> = ({ checkOnInit = true, config, children }) => {
 
     return new Promise<void>(async (resolve, reject) => {
       try {
+        if (authToken) authToken = null;
+
         await localAxiosInstance.post(`${apiUrl}/${signOutRoute}`);
         // Only sign out after the server has successfully responded.
         setSanctumState({ user: null, authenticated: false });
@@ -139,6 +147,9 @@ const Sanctum: React.FC<Props> = ({ checkOnInit = true, config, children }) => {
           `${apiUrl}/${userObjectRoute}`,
           {
             maxRedirects: 0,
+            headers: {
+              "Authorization": `Bearer ${authToken}`,
+            },
           }
         );
 
