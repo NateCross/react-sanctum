@@ -52,13 +52,13 @@ const Sanctum: React.FC<Props> = ({ checkOnInit = true, config, children }) => {
     username: string,
     password: string,
     remember: boolean = false,
-    token: string? = null
+    token: string | null = null
   ): Promise<{ twoFactor: boolean; signedIn: boolean; user?: {} }> => {
     const { apiUrl, signInRoute, usernameKey } = config;
 
     return new Promise(async (resolve, reject) => {
       try {
-        if (token) authToken = token;
+        authToken = token;
 
         // Get CSRF cookie.
         await csrf();
